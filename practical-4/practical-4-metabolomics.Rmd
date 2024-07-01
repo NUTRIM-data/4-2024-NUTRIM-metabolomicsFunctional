@@ -5,7 +5,20 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+## Setting up the required libraries:
+Note that this step might take some time.
+
 ```{r setup, include=FALSE}
+##rmarkdown
+if(!"rmarkdown" %in% installed.packages()){install.packages("rmarkdown")}
+library(rmarkdown)
+##knitr
+if(!"knitr" %in% installed.packages()){install.packages("knitr")}
+library(knitr)
+##tidyr
+if(!"tidyr" %in% installed.packages()){install.packages("tidyr")}
+library(tidyr)
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -263,10 +276,6 @@ if(length(intersectingHMDB) == 0 ){print("All relevant biomarkers are in a pathw
 ## Use a SPARQL query to connect the HMDB IDs to ChEBI IDs
 This step is required to connect our data to the WikiPathways pathways in Cytoscape
 ```{r}
-##Install package for cleaning up dataframes
-install.packages("tidyverse")
-library(tidyr)
-
 ##Connect to Endpoint Wikidata
 endpointwd <- "https://query.wikidata.org/sparql"
 
@@ -289,6 +298,13 @@ mSet_extendedIDs <- mSet_extendedIDs %>% tidyr::drop_na(CHEBI)
 mSet_extendedIDs <- mSet_extendedIDs %>% tidyr::drop_na(foldchange_disorder)
 
 ```
+
+## Final check
+Look how many rows we now have in the mSet_extendedIDs versus the original data, and try to discover where this is comming from.
+```{r}
+print(paste0("The original dataset has: ",nrow(mSet), " rows; the dataset with additional ChEBI identifiers has: ", nrow(mSet_extendedIDs)))
+```
+
 
 ## Final steps as interactive Demo
 Now, open Cytoscape on your laptop, use the WikiPathways App for Cytoscape to download a pathway from the list of relevant pathways, and visualize the data.
