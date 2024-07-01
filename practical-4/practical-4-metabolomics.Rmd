@@ -305,6 +305,14 @@ Look how many rows we now have in the mSet_extendedIDs versus the original data,
 print(paste0("The original dataset has: ",nrow(mSet), " rows; the dataset with additional ChEBI identifiers has: ", nrow(mSet_extendedIDs)))
 ```
 
+## Export the extended ID data:
+```{r data_export, warning=FALSE, message=FALSE}
+##Save the data file
+
+##To be added by yourself
+
+```
+
 
 ## Final steps as interactive Demo
 Now, open Cytoscape on your laptop, use the WikiPathways App for Cytoscape to download a pathway from the list of relevant pathways, and visualize the data.
