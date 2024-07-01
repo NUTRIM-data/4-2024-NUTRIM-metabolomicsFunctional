@@ -296,6 +296,8 @@ mSet_extendedIDs <- merge(mSet, HMDBCHEBIMappings_results ,by.x="HMDB_ID", by.y=
 mSet_extendedIDs <- mSet_extendedIDs %>% tidyr::drop_na(CHEBI)
 #filter out metabolites that has NA value for foldchange_disorder
 mSet_extendedIDs <- mSet_extendedIDs %>% tidyr::drop_na(foldchange_disorder)
+## Add 'CHEBI:' in front of each ChEBI ID to match to expected output in WikiPathways
+mSet_extendedIDs$CHEBI <- sub("^", "CHEBI:", mSet_extendedIDs$CHEBI )
 
 ```
 
