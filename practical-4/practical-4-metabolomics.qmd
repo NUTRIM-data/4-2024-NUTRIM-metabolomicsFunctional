@@ -1,14 +1,36 @@
 ---
 title: "FunctionalMetabolomics"
 author: "DeniseSl22"
-date: "`r Sys.Date()`"
-output: html_document
+format: html
+editor: visual
 ---
 
-## Setting up the required libraries:
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+**Setting up the required libraries:**
+
 Note that this step might take some time.
 
-```{r setup, include=FALSE}
+```{r}
 ##rmarkdown
 if(!"rmarkdown" %in% installed.packages()){install.packages("rmarkdown")}
 library(rmarkdown)
@@ -22,25 +44,33 @@ library(tidyr)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Original Data Analysis:
+**Original Data Analysis:**
+
 The full analysis pipeline can be found here:
-https://github.com/BiGCAT-UM/Transcriptomics_Metabolomics_Analysis/tree/master/metabolomics_analysis 
 
+<https://github.com/BiGCAT-UM/Transcriptomics_Metabolomics_Analysis/tree/master/metabolomics_analysis>
 
-## Introduction
+**Introduction**
+
 In this workflow, we link the metabolites of interest to pathway data from WikiPathways, based on their HMDB identifier.
-```{r data_import,warning=FALSE, message=FALSE}
+
+```{r}
 #Check working directory:
+
 getwd()
+
 #Obtain data from folder
+
 mSet <- read.csv("inputData/mbxData_CD.csv", na.strings=c("", "NA"))
 ```
 
-You should now have one dataframe loaded which is called 'mSet_CD', containing 450 rows and 6 columns. 
+You should now have one dataframe loaded which is called 'mSet_CD', containing 450 rows and 6 columns.
 
-## Download relevant package: SPARQL
+**Download relevant package: SPARQL**
+
 We will use the WikiPathways SPARQL endpoint to find relevant pathways for metabolomics data
-```{r pathway_retrieval_setup,warning=FALSE, message=FALSE}
+
+```{r}
 if (!requireNamespace("SPARQL", quietly = TRUE)) {
   # List of required packages for SPARQL
   required_packages <- c("XML", "RCurl", "bitops", "SPARQL")
@@ -76,9 +106,9 @@ if (!requireNamespace("SPARQL", quietly = TRUE)) {
 library(SPARQL)
 ```
 
+**Find pathways based on relevant IDs column**
 
-## Find pathways based on relevant IDs column
-```{r pathway_retrieval,warning=FALSE, message=FALSE}
+```{r}
 ##Connect to Endpoint WikiPathways
 endpointwp <- "https://sparql.wikipathways.org/sparql"
 ## 1. Query metadata:
@@ -148,7 +178,10 @@ print(showresults_CombinePWs[1:nrow(showresults_CombinePWs),c(2:4)])
 remove(list_Relevant_HMDB_IDs, query_HMDBs)
 ```
 
-# Retrieve additional relevant pathway data, for example protein and gene data
+**Retrieve additional relevant pathway data**
+
+For example protein and gene data
+
 ```{r}
 string_WP_IDs_list <- paste0("'", showresults_CombinePWs$pathway ,"'")
 string_WP_IDs <- paste(c(string_WP_IDs_list), collapse=' ' )
@@ -189,11 +222,13 @@ remove(query_CombinePWs_gene,results_CombinePWs_gene)
 showresults_CombinePW_data <- merge(x = showresults_CombinePWs, y = showresults_CombinePWs_gene, by = "pathwayRes", all.x = TRUE)
 ##Reorder data to fit previous format:
 showresults_CombinePW_data <- showresults_CombinePW_data[, c(1:4, 6:8, 5)]
-
 ```
 
-## Calculate the ORA score for each pathway, using the Fishers exact test.
-```{r pathway_analysis, warning=FALSE, message=FALSE}
+**Calculate the ORA score for each pathway**
+
+Using the Fishers exact test.
+
+```{r}
 ##Based on: https://www.pathwaycommons.org/guide/primers/statistics/fishers_exact_test/
 
 #Create a dataframe to store the required numbers in.
@@ -223,15 +258,19 @@ pathwayAnalysis_results_sorted <- pathwayAnalysis_results[  with(pathwayAnalysis
 print(pathwayAnalysis_results_sorted[1:5,])
 ```
 
-## Export the pathway data:
-```{r data_export, warning=FALSE, message=FALSE}
+**Export the pathway data:**
+
+```{r}
 ##Save the data file
 nameDataFile <- paste0("outputData/mbxPWdata.csv")
 write.table(pathwayAnalysis_results_sorted, nameDataFile, sep =",", row.names = FALSE)
 ```
 
-## Print significantly changed metabolites which were not in a pathway, by ID and name:
-```{r missing_data,warning=FALSE, message=FALSE }
+**Print significantly changed metabolites which were not in a pathway**
+
+by ID and name:
+
+```{r}
 ##Find Missing Biomarkers (not part of any Human pathway model)
 item1 = "PREFIX ch: <https://identifiers.org/hmdb/>
 SELECT DISTINCT ?HMDBMetabolite WHERE {
@@ -273,8 +312,10 @@ if(length(intersectingHMDB) == 0 ){print("All relevant biomarkers are in a pathw
   print(paste0(length(intersectingHMDB), " biomarkers are not in a pathway; with the following HMDB IDs: " , string_intersectingHMDB, "; with the following Database names: ", string_missingNames))}
 ```
 
-## Use a SPARQL query to connect the HMDB IDs to ChEBI IDs
+**Use a SPARQL query to connect the HMDB IDs to ChEBI IDs**
+
 This step is required to connect our data to the WikiPathways pathways in Cytoscape
+
 ```{r}
 ##Connect to Endpoint Wikidata
 endpointwd <- "https://query.wikidata.org/sparql"
@@ -298,29 +339,32 @@ mSet_extendedIDs <- mSet_extendedIDs %>% tidyr::drop_na(CHEBI)
 mSet_extendedIDs <- mSet_extendedIDs %>% tidyr::drop_na(foldchange_disorder)
 ## Add 'CHEBI:' in front of each ChEBI ID to match to expected output in WikiPathways
 mSet_extendedIDs$CHEBI <- sub("^", "CHEBI:", mSet_extendedIDs$CHEBI )
-
 ```
 
-## Final check
+**Final check**
+
 Look how many rows we now have in the mSet_extendedIDs versus the original data, and try to discover where this is coming from.
+
 ```{r}
 print(paste0("The original dataset has: ",nrow(mSet), " rows; the dataset with additional ChEBI identifiers has: ", nrow(mSet_extendedIDs)))
 ```
 
-## Export the extended ID data:
-```{r data_export, warning=FALSE, message=FALSE}
+**Export the extended ID data:**
+
+```{r}
 ##Save the data file
 
 ##To be added by yourself
 
 ```
 
+**Final steps as interactive Demo**
 
-## Final steps as interactive Demo
 Now, open Cytoscape on your laptop, use the WikiPathways App for Cytoscape to download a pathway from the list of relevant pathways, and visualize the data.
 
-## Print session info:
-```{r print_session_info}
+**Print session info:**
+
+```{r}
 ##Print session info:
 sessionInfo()
 ```
